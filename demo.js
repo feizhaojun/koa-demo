@@ -1,10 +1,12 @@
 const Koa = require('koa');
+const os = require('os');
 const fs = require('fs');
 const fsp = require('fs.promised');
 const path = require('path');
 const route = require('koa-route');
 const serve = require('koa-static');
 const compose = require('koa-compose');
+const koaBody = require('koa-body');
 
 const app = new Koa();
 app.listen(3000);
@@ -38,6 +40,35 @@ const asyncDemo = async function (ctx, next) {
 const redirect = ctx => {
   ctx.response.redirect('/');
 };
+
+// const post = ctx => {
+//   const { name } = ctx.request.body;
+//   // if (!name) ctx.throw(400, 'name required');
+//   ctx.body = { name };
+// };
+// app.use(koaBody());
+// app.use(post);
+
+// Upload
+const upload = ctx => {
+  const tmpdir = os.tmpdir();
+  const filePaths = [];
+  const files = ctx.request.body.files || {};
+  console.log(files);
+
+  for (let key in files) {
+    const file = files[key];
+    const filePath = path.join(tmpdir, file.name);
+    const reader = fs.createReadStream(file.path);
+    const writer = fs.createWriteStream(filePath);
+    reader.pipe(writer);
+    filePaths.push(filePath);
+  }
+
+  ctx.body = filePaths;
+};
+app.use(koaBody({ multipart: true }));
+app.use(upload);
 
 // Static
 // TODO: serve 是否接受通配符参数?

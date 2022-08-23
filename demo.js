@@ -70,7 +70,7 @@ app.use(koaBody({ multipart: true }));
 // TODO: serve 是否接受通配符参数?
 // TODO: 不能放在 logger 后面?
 // TODO: URL 请求指定路径?
-const serveDemo = serve(path.join(__dirname, 'static'));
+const serveDemo = serve(path.join(__dirname, 'public'));
 app.use(serveDemo);
 
 // Middleware

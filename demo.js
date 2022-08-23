@@ -41,39 +41,36 @@ const redirect = ctx => {
   ctx.response.redirect('/');
 };
 
-// const post = ctx => {
-//   const { name } = ctx.request.body;
-//   // if (!name) ctx.throw(400, 'name required');
-//   ctx.body = { name };
-// };
-// app.use(koaBody());
-// app.use(post);
+const post = ctx => {
+  const { name } = ctx.request.body;
+  console.log(ctx.request.body);
+  // if (!name) ctx.throw(400, 'name required');
+  ctx.body = { name };
+};
 
 // Upload
 const upload = ctx => {
-  const tmpdir = os.tmpdir();
+  const files = ctx.request.files.files || {};
   const filePaths = [];
-  const files = ctx.request.body.files || {};
-  console.log(files);
 
-  for (let key in files) {
-    const file = files[key];
-    const filePath = path.join(tmpdir, file.name);
-    const reader = fs.createReadStream(file.path);
-    const writer = fs.createWriteStream(filePath);
-    reader.pipe(writer);
+  files.forEach(file => {
+    console.log(os.tmpdir());
+    const filePath = path.join(__dirname, 'upload', file.newFilename) + '.' + file.originalFilename.split('.')[1];
+    const reader = fs.createReadStream(file.filepath);
+    const stream = fs.createWriteStream(filePath);
+    reader.pipe(stream);
     filePaths.push(filePath);
-  }
+  });
 
   ctx.body = filePaths;
 };
 app.use(koaBody({ multipart: true }));
-app.use(upload);
 
 // Static
 // TODO: serve 是否接受通配符参数?
 // TODO: 不能放在 logger 后面?
-const serveDemo = serve(path.join(__dirname));
+// TODO: URL 请求指定路径?
+const serveDemo = serve(path.join(__dirname, 'static'));
 app.use(serveDemo);
 
 // Middleware
@@ -109,7 +106,9 @@ app.use(logger);
 app.use(route.get('/', index));
 app.use(route.get('/about', about));
 app.use(route.get('/async', asyncDemo));
+app.use(route.post('/post', post));
 app.use(route.get('/redirect', redirect));
+app.use(route.post('/upload', upload));
 
 // app.on('error', (err, ctx) => {
 //   console.error(err);
